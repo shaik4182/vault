@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { View, TextInput, Button, Alert } from "react-native";
+import { View, TextInput, Button, Alert, Text } from "react-native";
 import { createVault } from "../vault";
+import { globalStyles } from "../styles";
 
 export default function CreateVaultScreen({ navigation }) {
   const [outerPw, setOuterPw] = useState("");
@@ -17,10 +18,23 @@ export default function CreateVaultScreen({ navigation }) {
   }
 
   return (
-    <View style={{ padding: 20 }}>
-      <TextInput placeholder="Outer Password" secureTextEntry onChangeText={setOuterPw} />
-      <TextInput placeholder="Master Password" secureTextEntry onChangeText={setMasterPw} />
-      <Button title="Create Vault" onPress={handleCreate} />
+    <View style={globalStyles.container}>
+      <Text style={globalStyles.title}>Create Vault</Text>
+      <TextInput
+        placeholder="Outer Password"
+        secureTextEntry
+        style={globalStyles.input}
+        onChangeText={setOuterPw}
+      />
+      <TextInput
+        placeholder="Master Password"
+        secureTextEntry
+        style={globalStyles.input}
+        onChangeText={setMasterPw}
+      />
+      <View style={globalStyles.button}>
+        <Button title="Create Vault" onPress={handleCreate} />
+      </View>
     </View>
   );
 }

@@ -1,6 +1,21 @@
 import React, { useState } from "react";
-import { View, Text, Button, TextInput, Alert, ScrollView } from "react-native";
-import { revealContent, updateVault, exportVault, importVault } from "../vault";
+import {
+  View,
+  Text,
+  Button,
+  TextInput,
+  Alert,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
+import * as Clipboard from "expo-clipboard";
+import {
+  revealContent,
+  updateVault,
+  exportVault,
+  importVault,
+} from "../vault";
+import { globalStyles } from "../styles";
 
 export default function VaultScreen({ route, navigation }) {
   const { innerData, outerPw } = route.params;
@@ -45,21 +60,68 @@ export default function VaultScreen({ route, navigation }) {
     }
   }
 
+  async function copyToClipboard(value) {
+    await Clipboard.setStringAsync(value);
+    Alert.alert("Copied!", value);
+  }
+
   return (
-    <ScrollView style={{ padding: 20 }}>
+    <ScrollView style={globalStyles.container}>
+      {/* <Text style={globalStyles.title}>Vault</Text> */}
+
       {!secrets ? (
         <>
-          <TextInput placeholder="Master Password" secureTextEntry onChangeText={setMasterPw} />
+          <TextInput
+            placeholder="Master Password"
+            secureTextEntry
+            style={globalStyles.input}
+            onChangeText={setMasterPw}
+          />
           <Button title="Show Content" onPress={handleShow} />
         </>
       ) : (
         <>
           <Text style={{ fontWeight: "bold", marginBottom: 10 }}>Secrets:</Text>
           {Object.entries(secrets).map(([k, v]) => (
-            <Text key={k}>{k}: {v}</Text>
+            <View
+              key={k}
+              style={{
+                backgroundColor: "white",
+                borderRadius: 8,
+                padding: 12,
+                marginBottom: 10,
+                borderWidth: 1,
+                borderColor: "#ddd",
+              }}
+            >
+              <Text style={{ fontWeight: "bold" }}>{k}</Text>
+              <Text style={{ marginVertical: 4 }}>{v}</Text>
+              <TouchableOpacity
+                onPress={() => copyToClipboard(v)}
+                style={{
+                  backgroundColor: "#007bff",
+                  padding: 6,
+                  borderRadius: 6,
+                  alignSelf: "flex-start",
+                }}
+              >
+                <Text style={{ color: "white" }}>Copy</Text>
+              </TouchableOpacity>
+            </View>
           ))}
-          <TextInput placeholder="New Key" value={newKey} onChangeText={setNewKey} />
-          <TextInput placeholder="New Value" value={newValue} onChangeText={setNewValue} />
+
+          <TextInput
+            placeholder="New Key"
+            value={newKey}
+            style={globalStyles.input}
+            onChangeText={setNewKey}
+          />
+          <TextInput
+            placeholder="New Value"
+            value={newValue}
+            style={globalStyles.input}
+            onChangeText={setNewValue}
+          />
           <Button title="Add Secret" onPress={handleAdd} />
         </>
       )}
@@ -67,6 +129,11 @@ export default function VaultScreen({ route, navigation }) {
       <View style={{ marginTop: 20 }}>
         <Button title="Export Vault" onPress={handleExport} />
         <Button title="Import Vault" onPress={handleImport} />
+        <Button
+          title="Logout"
+          color="red"
+          onPress={() => navigation.replace("Unlock")}
+        />
       </View>
     </ScrollView>
   );
