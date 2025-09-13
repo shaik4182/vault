@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "334c3b04-74af-4b47-be03-a57ee958aecb"
+      }
+    },
+    "android": {
+      "package": "com.shaik4182.vault"
+    }
+  }
+}
