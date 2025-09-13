@@ -29,7 +29,7 @@ export default function VaultScreen({ route, navigation }) {
   const [search, setSearch] = useState("");
   const [editKey, setEditKey] = useState(null);
 
-  // 👇 for full image preview
+  // 👇 full image preview state
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewUri, setPreviewUri] = useState(null);
 
@@ -71,7 +71,7 @@ export default function VaultScreen({ route, navigation }) {
       const photoValue = {
         type: "photo",
         path: result.assets[0].uri,
-        note: newValue || "", // optional description
+        note: newValue || "",
       };
 
       const updated = { ...secrets, [newKey]: photoValue };
@@ -125,15 +125,18 @@ export default function VaultScreen({ route, navigation }) {
     : [];
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f5f7fa" }}>
+    <View style={{ flex: 1, backgroundColor: "#eef2f7" }}>
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, padding: 20 }}
         keyboardShouldPersistTaps="handled"
       >
         {!secrets ? (
           <>
+            <Text style={{ fontSize: 15, fontWeight: "500", marginBottom: 6 }}>
+              Master Password
+            </Text>
             <TextInput
-              placeholder="Master Password"
+              placeholder="Enter your master password to reveal secrets"
               secureTextEntry
               onChangeText={setMasterPw}
               style={{
@@ -150,8 +153,11 @@ export default function VaultScreen({ route, navigation }) {
         ) : (
           <>
             {/* Search */}
+            <Text style={{ fontSize: 15, fontWeight: "500", marginBottom: 6 }}>
+              Search
+            </Text>
             <TextInput
-              placeholder="Search..."
+              placeholder="Search by key name..."
               value={search}
               onChangeText={setSearch}
               style={{
@@ -259,11 +265,14 @@ export default function VaultScreen({ route, navigation }) {
             ))}
 
             {/* Add new or edit secret */}
+            <Text style={{ fontSize: 15, fontWeight: "500", marginBottom: 6 }}>
+              Key
+            </Text>
             <TextInput
-              placeholder="Key"
+              placeholder="Enter a key (e.g. Gmail)"
               value={newKey}
               onChangeText={setNewKey}
-              editable={!editKey} // prevent changing key name during edit
+              editable={!editKey}
               style={{
                 borderWidth: 1,
                 borderColor: "#ccc",
@@ -273,8 +282,12 @@ export default function VaultScreen({ route, navigation }) {
                 backgroundColor: editKey ? "#eee" : "#fff",
               }}
             />
+
+            <Text style={{ fontSize: 15, fontWeight: "500", marginBottom: 6 }}>
+              Value / Note
+            </Text>
             <TextInput
-              placeholder="Value / Note"
+              placeholder="Enter value (password / note)"
               value={newValue}
               onChangeText={setNewValue}
               style={{
@@ -291,11 +304,7 @@ export default function VaultScreen({ route, navigation }) {
               onPress={handleAdd}
             />
             <View style={{ marginTop: 10 }}>
-              <Button
-                title="Add Photo"
-                color="orange"
-                onPress={handleAddPhoto}
-              />
+              <Button title="Add Photo" color="orange" onPress={handleAddPhoto} />
             </View>
           </>
         )}

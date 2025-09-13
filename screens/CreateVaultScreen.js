@@ -19,19 +19,24 @@ export default function CreateVaultScreen({ navigation }) {
 
   return (
     <View style={globalStyles.container}>
-      <Text style={globalStyles.title}>Create Vault</Text>
+      {/* <Text style={globalStyles.title}>Create Vault</Text> */}
+
+      <Text style={globalStyles.label}>Outer Password</Text>
       <TextInput
-        placeholder="Outer Password"
+        placeholder="Enter outer password"
         secureTextEntry
         style={globalStyles.input}
         onChangeText={setOuterPw}
       />
+
+      <Text style={globalStyles.label}>Master Password</Text>
       <TextInput
-        placeholder="Master Password"
+        placeholder="Enter master password (used to reveal secrets)"
         secureTextEntry
         style={globalStyles.input}
         onChangeText={setMasterPw}
       />
+
       <View style={globalStyles.button}>
         <Button title="Create Vault" onPress={handleCreate} />
       </View>

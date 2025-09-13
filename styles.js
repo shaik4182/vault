@@ -1,10 +1,9 @@
-// styles.js
 import { StyleSheet } from "react-native";
 
 export const globalStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0f4f8", // background
+    backgroundColor: "#f7eef0ff", // softer background
     padding: 20,
   },
   input: {
@@ -23,5 +22,11 @@ export const globalStyles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 16,
     color: "#222",
+  },
+  label: {
+    fontSize: 15,
+    fontWeight: "500",
+    marginBottom: 6,
+    color: "#444",
   },
 });
