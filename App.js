@@ -25,7 +25,11 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: true }} initialRouteName={initialRoute}>
         <Stack.Screen name="CreateVault" component={CreateVaultScreen} />
-        <Stack.Screen name="Unlock" component={UnlockScreen} />
+        <Stack.Screen 
+  name="Unlock" 
+  component={UnlockScreen} 
+  options={{ title: "Unlock Vault" }} 
+/>
         <Stack.Screen name="Vault" component={VaultScreen} />
       </Stack.Navigator>
     </NavigationContainer>

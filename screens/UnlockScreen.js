@@ -16,17 +16,18 @@ export default function UnlockScreen({ navigation }) {
   }
 
   return (
-    <View style={globalStyles.container}>
-      <Text style={globalStyles.title}>Unlock Vault</Text>
-      <TextInput
-        placeholder="Outer Password"
-        secureTextEntry
-        style={globalStyles.input}
-        onChangeText={setOuterPw}
-      />
-      <View style={globalStyles.button}>
-        <Button title="Unlock Vault" onPress={handleUnlock} />
-      </View>
-    </View>
+    // UnlockScreen.js
+<View style={globalStyles.container}>
+  <TextInput
+    placeholder="Outer Password"
+    secureTextEntry
+    style={globalStyles.input}
+    onChangeText={setOuterPw}
+  />
+  <View style={globalStyles.button}>
+    <Button title="Unlock Vault" onPress={handleUnlock} />
+  </View>
+</View>
+
   );
 }

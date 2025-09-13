@@ -1,12 +1,31 @@
 {
   "expo": {
+    "name": "Vault",
+    "slug": "vault",
+    "version": "1.0.0",
+    "orientation": "portrait",
     "extra": {
       "eas": {
         "projectId": "334c3b04-74af-4b47-be03-a57ee958aecb"
       }
     },
     "android": {
-      "package": "com.shaik4182.vault"
-    }
+      "package": "com.shaik4182.vault",
+      "permissions": [
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow Vault to access your photos.",
+          "savePhotosPermission": "Allow Vault to save photos to your gallery."
+        }
+      ]
+    ]
   }
 }

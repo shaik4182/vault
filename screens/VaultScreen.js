@@ -7,15 +7,18 @@ import {
   Alert,
   ScrollView,
   TouchableOpacity,
+  Image,
+  Modal,
+  Pressable,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
+import * as ImagePicker from "expo-image-picker";
 import {
   revealContent,
   updateVault,
   exportVault,
   importVault,
 } from "../vault";
-import { globalStyles } from "../styles";
 
 export default function VaultScreen({ route, navigation }) {
   const { innerData, outerPw } = route.params;
@@ -23,6 +26,12 @@ export default function VaultScreen({ route, navigation }) {
   const [secrets, setSecrets] = useState(null);
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");
+  const [search, setSearch] = useState("");
+  const [editKey, setEditKey] = useState(null);
+
+  // 👇 for full image preview
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewUri, setPreviewUri] = useState(null);
 
   function handleShow() {
     try {
@@ -34,12 +43,61 @@ export default function VaultScreen({ route, navigation }) {
   }
 
   async function handleAdd() {
+    if (!newKey || !newValue) {
+      Alert.alert("Error", "Please enter both key and value.");
+      return;
+    }
     const updated = { ...secrets, [newKey]: newValue };
     await updateVault(outerPw, masterPw, updated);
     setSecrets(updated);
     setNewKey("");
     setNewValue("");
-    Alert.alert("Secret Added!");
+    setEditKey(null);
+    Alert.alert("Secret Saved!");
+  }
+
+  async function handleAddPhoto() {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      if (!newKey) {
+        Alert.alert("Error", "Please provide a key for the photo.");
+        return;
+      }
+
+      const photoValue = {
+        type: "photo",
+        path: result.assets[0].uri,
+        note: newValue || "", // optional description
+      };
+
+      const updated = { ...secrets, [newKey]: photoValue };
+      await updateVault(outerPw, masterPw, updated);
+      setSecrets(updated);
+      setNewKey("");
+      setNewValue("");
+      Alert.alert("Photo Added!");
+    }
+  }
+
+  async function handleDelete(key) {
+    const updated = { ...secrets };
+    delete updated[key];
+    await updateVault(outerPw, masterPw, updated);
+    setSecrets(updated);
+    Alert.alert("Secret Deleted!");
+  }
+
+  async function handleCopy(value) {
+    if (typeof value === "string") {
+      await Clipboard.setStringAsync(value);
+      Alert.alert("Copied to clipboard!");
+    } else {
+      Alert.alert("Cannot copy photos, only text values.");
+    }
   }
 
   async function handleExport() {
@@ -60,81 +118,228 @@ export default function VaultScreen({ route, navigation }) {
     }
   }
 
-  async function copyToClipboard(value) {
-    await Clipboard.setStringAsync(value);
-    Alert.alert("Copied!", value);
-  }
+  const filteredSecrets = secrets
+    ? Object.entries(secrets).filter(([k]) =>
+        k.toLowerCase().includes(search.toLowerCase())
+      )
+    : [];
 
   return (
-    <ScrollView style={globalStyles.container}>
-      {/* <Text style={globalStyles.title}>Vault</Text> */}
-
-      {!secrets ? (
-        <>
-          <TextInput
-            placeholder="Master Password"
-            secureTextEntry
-            style={globalStyles.input}
-            onChangeText={setMasterPw}
-          />
-          <Button title="Show Content" onPress={handleShow} />
-        </>
-      ) : (
-        <>
-          <Text style={{ fontWeight: "bold", marginBottom: 10 }}>Secrets:</Text>
-          {Object.entries(secrets).map(([k, v]) => (
-            <View
-              key={k}
+    <View style={{ flex: 1, backgroundColor: "#f5f7fa" }}>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, padding: 20 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        {!secrets ? (
+          <>
+            <TextInput
+              placeholder="Master Password"
+              secureTextEntry
+              onChangeText={setMasterPw}
               style={{
-                backgroundColor: "white",
-                borderRadius: 8,
-                padding: 12,
-                marginBottom: 10,
                 borderWidth: 1,
-                borderColor: "#ddd",
+                borderColor: "#ccc",
+                padding: 10,
+                borderRadius: 8,
+                marginBottom: 10,
+                backgroundColor: "#fff",
               }}
-            >
-              <Text style={{ fontWeight: "bold" }}>{k}</Text>
-              <Text style={{ marginVertical: 4 }}>{v}</Text>
-              <TouchableOpacity
-                onPress={() => copyToClipboard(v)}
+            />
+            <Button title="Show Content" onPress={handleShow} />
+          </>
+        ) : (
+          <>
+            {/* Search */}
+            <TextInput
+              placeholder="Search..."
+              value={search}
+              onChangeText={setSearch}
+              style={{
+                borderWidth: 1,
+                borderColor: "#ccc",
+                padding: 10,
+                borderRadius: 8,
+                marginBottom: 15,
+                backgroundColor: "#fff",
+              }}
+            />
+
+            <Text style={{ fontWeight: "bold", marginBottom: 10 }}>
+              Secrets:
+            </Text>
+            {filteredSecrets.map(([k, v]) => (
+              <View
+                key={k}
                 style={{
-                  backgroundColor: "#007bff",
-                  padding: 6,
-                  borderRadius: 6,
-                  alignSelf: "flex-start",
+                  borderWidth: 1,
+                  borderColor: "#ccc",
+                  borderRadius: 8,
+                  padding: 10,
+                  marginBottom: 10,
+                  backgroundColor: "#fff",
                 }}
               >
-                <Text style={{ color: "white" }}>Copy</Text>
-              </TouchableOpacity>
+                {/* Key */}
+                <Text style={{ fontWeight: "bold" }}>{k}</Text>
+
+                {/* Render text vs photo */}
+                {typeof v === "object" && v.type === "photo" ? (
+                  <>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setPreviewUri(v.path);
+                        setPreviewVisible(true);
+                      }}
+                    >
+                      <Image
+                        source={{ uri: v.path }}
+                        style={{
+                          width: "100%",
+                          height: 180,
+                          marginTop: 8,
+                          borderRadius: 8,
+                        }}
+                        resizeMode="cover"
+                      />
+                    </TouchableOpacity>
+                    {v.note ? (
+                      <Text style={{ marginTop: 5 }}>{v.note}</Text>
+                    ) : null}
+                  </>
+                ) : (
+                  <Text style={{ marginTop: 4 }}>{v}</Text>
+                )}
+
+                {/* Action buttons */}
+                <View style={{ flexDirection: "row", marginTop: 8 }}>
+                  {typeof v === "string" && (
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: "#007bff",
+                        padding: 8,
+                        borderRadius: 6,
+                        marginRight: 10,
+                      }}
+                      onPress={() => handleCopy(v)}
+                    >
+                      <Text style={{ color: "#fff" }}>Copy</Text>
+                    </TouchableOpacity>
+                  )}
+
+                  {typeof v === "string" && (
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: "#28a745",
+                        padding: 8,
+                        borderRadius: 6,
+                        marginRight: 10,
+                      }}
+                      onPress={() => {
+                        setNewKey(k);
+                        setNewValue(v);
+                        setEditKey(k);
+                      }}
+                    >
+                      <Text style={{ color: "#fff" }}>Edit</Text>
+                    </TouchableOpacity>
+                  )}
+
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: "#dc3545",
+                      padding: 8,
+                      borderRadius: 6,
+                    }}
+                    onPress={() => handleDelete(k)}
+                  >
+                    <Text style={{ color: "#fff" }}>Delete</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+
+            {/* Add new or edit secret */}
+            <TextInput
+              placeholder="Key"
+              value={newKey}
+              onChangeText={setNewKey}
+              editable={!editKey} // prevent changing key name during edit
+              style={{
+                borderWidth: 1,
+                borderColor: "#ccc",
+                padding: 10,
+                borderRadius: 8,
+                marginBottom: 10,
+                backgroundColor: editKey ? "#eee" : "#fff",
+              }}
+            />
+            <TextInput
+              placeholder="Value / Note"
+              value={newValue}
+              onChangeText={setNewValue}
+              style={{
+                borderWidth: 1,
+                borderColor: "#ccc",
+                padding: 10,
+                borderRadius: 8,
+                marginBottom: 10,
+                backgroundColor: "#fff",
+              }}
+            />
+            <Button
+              title={editKey ? "Update Secret" : "Add Secret"}
+              onPress={handleAdd}
+            />
+            <View style={{ marginTop: 10 }}>
+              <Button
+                title="Add Photo"
+                color="orange"
+                onPress={handleAddPhoto}
+              />
             </View>
-          ))}
+          </>
+        )}
 
-          <TextInput
-            placeholder="New Key"
-            value={newKey}
-            style={globalStyles.input}
-            onChangeText={setNewKey}
+        {/* Bottom actions */}
+        <View style={{ marginTop: 30, marginBottom: 60 }}>
+          <Button title="Export Vault" onPress={handleExport} />
+          <Button title="Import Vault" onPress={handleImport} />
+          <Button
+            title="Logout"
+            color="red"
+            onPress={() => navigation.replace("Unlock")}
           />
-          <TextInput
-            placeholder="New Value"
-            value={newValue}
-            style={globalStyles.input}
-            onChangeText={setNewValue}
-          />
-          <Button title="Add Secret" onPress={handleAdd} />
-        </>
-      )}
+        </View>
+      </ScrollView>
 
-      <View style={{ marginTop: 20 }}>
-        <Button title="Export Vault" onPress={handleExport} />
-        <Button title="Import Vault" onPress={handleImport} />
-        <Button
-          title="Logout"
-          color="red"
-          onPress={() => navigation.replace("Unlock")}
-        />
-      </View>
-    </ScrollView>
+      {/* Full image preview modal */}
+      <Modal visible={previewVisible} transparent={true}>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.9)",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Image
+            source={{ uri: previewUri }}
+            style={{ width: "90%", height: "70%", borderRadius: 12 }}
+            resizeMode="contain"
+          />
+          <Pressable
+            style={{
+              marginTop: 20,
+              padding: 10,
+              backgroundColor: "#fff",
+              borderRadius: 6,
+            }}
+            onPress={() => setPreviewVisible(false)}
+          >
+            <Text style={{ color: "black" }}>Close</Text>
+          </Pressable>
+        </View>
+      </Modal>
+    </View>
   );
 }

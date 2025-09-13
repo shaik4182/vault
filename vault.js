@@ -1,9 +1,11 @@
 import * as FileSystem from "expo-file-system/legacy";
 import * as DocumentPicker from "expo-document-picker";
 import * as Sharing from "expo-sharing";
+import * as ImagePicker from "expo-image-picker";
 import CryptoJS from "crypto-js";
 
 const VAULT_PATH = FileSystem.documentDirectory + "vault.enc";
+const PHOTO_DIR = FileSystem.documentDirectory + "photos/";
 
 // 🔑 Derive AES key from password using PBKDF2
 function deriveKey(password) {
@@ -99,4 +101,36 @@ export async function importVault() {
   await FileSystem.writeAsStringAsync(VAULT_PATH, content, {
     encoding: FileSystem.EncodingType.UTF8,
   });
+}
+
+// 🖼 Add photo to secrets
+export async function addPhoto(outerPw, masterPw, key, secrets) {
+  // Ensure photo folder exists
+  const dirInfo = await FileSystem.getInfoAsync(PHOTO_DIR);
+  if (!dirInfo.exists) {
+    await FileSystem.makeDirectoryAsync(PHOTO_DIR, { intermediates: true });
+  }
+
+  // Ask user to pick an image
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    quality: 0.8,
+  });
+
+  if (result.canceled || !result.assets?.length) return secrets;
+
+  const photo = result.assets[0];
+  const destPath = PHOTO_DIR + `${Date.now()}_${photo.fileName || "photo.jpg"}`;
+
+  // Copy image to vault's photos folder
+  await FileSystem.copyAsync({ from: photo.uri, to: destPath });
+
+  // Save reference in secrets
+  const updated = {
+    ...secrets,
+    [key]: { type: "photo", path: destPath },
+  };
+
+  await updateVault(outerPw, masterPw, updated);
+  return updated;
 }
